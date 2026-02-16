@@ -1,8 +1,11 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "LLM Analysis Service"
     environment: str = "development"
+
+    
+
 
     database_url: str
     redis_url: str
@@ -15,3 +18,6 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 settings = Settings()
+
+print("Loaded DATABASE_URL:", settings.database_url)
+print("Loaded REDIS_URL:", settings.redis_url)
