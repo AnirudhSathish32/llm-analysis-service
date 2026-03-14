@@ -3,7 +3,7 @@ import uuid
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
@@ -15,6 +15,9 @@ router = APIRouter(prefix="/v1/documents", tags=["documents"])
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/tmp/uploads"))
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".csv"}
 
+
+import logging
+logger = logging.getLogger(__name__)
 
 @router.post("", status_code=201)
 async def upload_document(
@@ -76,6 +79,8 @@ async def upload_document(
         }
 
     except Exception as e:
+        import traceback
+        logger.error("Ingestion failed: %s", traceback.format_exc())
         doc.status = "failed"
         await session.commit()
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
