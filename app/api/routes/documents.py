@@ -1,6 +1,7 @@
 import os
 import uuid
 import shutil
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, logger
@@ -16,7 +17,7 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/tmp/uploads"))
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".csv"}
 
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 @router.post("", status_code=201)
