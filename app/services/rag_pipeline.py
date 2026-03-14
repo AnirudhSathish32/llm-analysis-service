@@ -24,7 +24,7 @@ PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
 def _embed_texts(texts: list[str]) -> list[list[float]]:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     result = genai.embed_content(
-        model="models/text-embedding-004",
+        model="models/text-embedding-001",
         content=texts,
         task_type="retrieval_document",
     )
