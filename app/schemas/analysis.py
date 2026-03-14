@@ -28,7 +28,7 @@ class AnalysisResponseSchema(BaseModel):
     cached: bool
     provider: Optional[str] = None
     rag_chunks_used: Optional[int] = None
-
+    citations: Optional[list[CitationSchema]] = None
 
 class StoredAnalysisSchema(BaseModel):
     request_id: UUID
