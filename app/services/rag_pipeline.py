@@ -24,7 +24,7 @@ PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
 def _embed_texts(texts: list[str]) -> list[list[float]]:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     result = genai.embed_content(
-        model="models/text-embedding-001",
+        model="models/gemini-embedding-001",
         content=texts,
         task_type="retrieval_document",
     )
@@ -34,7 +34,7 @@ def _embed_texts(texts: list[str]) -> list[list[float]]:
 def _embed_query_text(text: str) -> list[float]:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     result = genai.embed_content(
-        model="models/text-embedding-004",
+        model="models/gemini-embedding-001",
         content=text,
         task_type="retrieval_query",
     )
