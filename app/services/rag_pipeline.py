@@ -20,7 +20,7 @@ CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
 TOP_K = int(os.getenv("RAG_TOP_K", "4"))
-EMBEDDING_MODEL = "models/embedding-001"
+EMBEDDING_MODEL = "models/text-embedding-004"
 
 
 # ---------------------------------------------------------------------------
