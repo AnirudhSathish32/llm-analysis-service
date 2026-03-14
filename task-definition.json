@@ -87,7 +87,8 @@
         }
       ],
       "environment": [
-        { "name": "ANONYMIZED_TELEMETRY", "value": "false" }
+        { "name": "ANONYMIZED_TELEMETRY", "value": "false" },
+        { "name": "CHROMA_SERVER_HTTP_PORT", "value": "8001" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
