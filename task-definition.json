@@ -21,16 +21,13 @@
         { "name": "CHROMA_PORT",   "value": "8001" },
         { "name": "CHUNK_SIZE",    "value": "500" },
         { "name": "CHUNK_OVERLAP", "value": "50" },
-        { "name": "RAG_TOP_K",     "value": "4" }
+        { "name": "RAG_TOP_K",     "value": "4" },
+        { "name": "REDIS_URL", "value": "redis://localhost:6379/0" }
       ],
       "secrets": [
         {
           "name": "DATABASE_URL",
           "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/DATABASE_URL-JUXztS"
-        },
-        {
-          "name": "REDIS_URL",
-          "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/REDIS_URL-v5xPtk"
         },
         {
           "name": "ANTHROPIC_API_KEY",
@@ -41,12 +38,37 @@
           "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/GEMINI_API_KEY-V4cogh"
         }
       ],
+      "dependsOn": [
+        {
+          "containerName": "redis",
+          "condition": "START"
+        }
+      ],
       "logConfiguration": {
         "logDriver": "awslogs", 
         "options": {
           "awslogs-group": "/ecs/llm-analysis-service",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "image": "redis:7",
+      "essential": false,
+      "portMappings": [
+        {
+          "containerPort": 6379,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/llm-analysis-service",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "redis"
         }
       }
     }
