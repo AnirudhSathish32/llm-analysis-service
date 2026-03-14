@@ -26,8 +26,8 @@ def _get_embeddings():
     return GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004",
         google_api_key=os.environ["GEMINI_API_KEY"],
+        request_options={"timeout": 60},
     )
- 
  
 # ---------------------------------------------------------------------------
 # Pinecone client

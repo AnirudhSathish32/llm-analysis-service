@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     )
     redis_url: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
-    llm_timeout_seconds: int = 60
+    llm_timeout_seconds: int = 120
     llm_max_retries: int = 2
     cache_ttl_seconds: int = 86400
 
