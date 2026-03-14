@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+
 class Settings(BaseSettings):
     app_name: str = "LLM Analysis Service"
     environment: str = "development"
@@ -14,8 +15,16 @@ class Settings(BaseSettings):
     llm_max_retries: int = 2
     cache_ttl_seconds: int = 86400
 
-    class Config:
-        env_file = ".env"
+    # ChromaDB
+    chroma_host: str = "localhost"
+    chroma_port: int = 8001
+
+    # RAG tuning
+    chunk_size: int = 500
+    chunk_overlap: int = 50
+    rag_top_k: int = 4
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
 
