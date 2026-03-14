@@ -26,5 +26,5 @@ and failures are persisted without crashing the system.
 ## Running Locally
 
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+docker compose up --build
+http://localhost:8000/docs
