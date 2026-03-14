@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import asyncio
 
-from app.api.routes import analysis, metrics
+from app.api.routes import analysis, metrics, documents
 from app.core.config import settings
 
 # Import the create_all_tables function from your script
@@ -29,6 +29,7 @@ app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.include_router(analysis.router)
 app.include_router(metrics.router)
+app.include_router(documents.router)
 
 @app.get("/health")
 async def health():

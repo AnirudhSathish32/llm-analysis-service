@@ -24,3 +24,14 @@ class AnalysisResult(Base):
     duration_ms = Column(Integer)
     token_usage = Column(Integer)
     cost_usd = Column(Numeric(10, 4))
+
+class Document(Base):
+    """Tracks every uploaded file and its ingestion status."""
+    __tablename__ = "documents"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    filename = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)        # pdf, txt, csv
+    status = Column(String, nullable=False)           # processing, ready, failed
+    chunk_count = Column(Integer, nullable=True)      # set after ingestion completes
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
