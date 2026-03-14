@@ -5,7 +5,7 @@ from pathlib import Path
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
-import google.generativeai as genai
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
@@ -27,26 +27,19 @@ EMBEDDING_MODEL = "models/text-embedding-004"
 # Embedding helper
 # ---------------------------------------------------------------------------
 
-def _embed(texts: list[str]) -> list[list[float]]:
-    """Call Google's embedding API for a batch of texts."""
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    result = genai.embed_content(
-        model=EMBEDDING_MODEL,
-        content=texts,
-        task_type="retrieval_document",
+def _get_embeddings():
+    return GoogleGenerativeAIEmbeddings(
+        model="models/text-embedding-004",
+        google_api_key=os.environ["GEMINI_API_KEY"],
     )
-    return result["embedding"] if isinstance(texts, str) else result["embedding"]
 
+def _embed(texts: list[str]) -> list[list[float]]:
+    embeddings = _get_embeddings()
+    return embeddings.embed_documents(texts)
 
 def _embed_query(text: str) -> list[float]:
-    """Embed a single query string."""
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    result = genai.embed_content(
-        model=EMBEDDING_MODEL,
-        content=text,
-        task_type="retrieval_query",
-    )
-    return result["embedding"]
+    embeddings = _get_embeddings()
+    return embeddings.embed_query(text)
 
 
 # ---------------------------------------------------------------------------
