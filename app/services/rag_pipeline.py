@@ -22,12 +22,24 @@ PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
 # Embedding helper
 # ---------------------------------------------------------------------------
  
-def _get_embeddings():
-    return GoogleGenerativeAIEmbeddings(
+def _embed_texts(texts: list[str]) -> list[list[float]]:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    result = genai.embed_content(
         model="models/text-embedding-004",
-        google_api_key=os.environ["GEMINI_API_KEY"],
-        request_options={"timeout": 60},
+        content=texts,
+        task_type="retrieval_document",
     )
+    return result["embedding"]
+
+
+def _embed_query_text(text: str) -> list[float]:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=text,
+        task_type="retrieval_query",
+    )
+    return result["embedding"]
  
 # ---------------------------------------------------------------------------
 # Pinecone client
@@ -93,8 +105,7 @@ async def ingest_document(file_path: str, document_id: str) -> int:
     ]
  
     # 4. Embed all chunks
-    embeddings_model = _get_embeddings()
-    embeddings = embeddings_model.embed_documents(texts)
+    embeddings = _embed_texts(texts)
  
     # 5. Store in Pinecone
     # Pinecone expects a list of (id, embedding, metadata) tuples
@@ -128,8 +139,7 @@ async def retrieve_chunks(document_id: str, query: str) -> list[dict]:
     """
     logger.info("Retrieving chunks for document %s", document_id)
  
-    embeddings_model = _get_embeddings()
-    query_embedding = embeddings_model.embed_query(query)
+    query_embedding = _embed_query_text(query)
  
     index = _get_index()
     results = index.query(
