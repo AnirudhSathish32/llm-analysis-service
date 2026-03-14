@@ -149,5 +149,5 @@ class LLMRouter:
         except Exception as gemini_err:
             logger.error("Gemini also failed: %s", gemini_err)
             raise RuntimeError(
-                f"Both LLM providers failed. Anthropic: {anthropic_err}. Gemini: {gemini_err}"
+                f"Both LLM providers failed. Gemini: {gemini_err}"
             )
