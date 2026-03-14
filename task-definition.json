@@ -1,0 +1,54 @@
+{
+  "family": "llm-analysis-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::593489476293:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "llm-analysis-service",
+      "image": "593489476293.dkr.ecr.us-east-2.amazonaws.com/llm-analysis-service:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "CHROMA_HOST",   "value": "localhost" },
+        { "name": "CHROMA_PORT",   "value": "8001" },
+        { "name": "CHUNK_SIZE",    "value": "500" },
+        { "name": "CHUNK_OVERLAP", "value": "50" },
+        { "name": "RAG_TOP_K",     "value": "4" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/DATABASE_URL-JUXztS"
+        },
+        {
+          "name": "REDIS_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/REDIS_URL-v5xPtk"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/ANTHROPIC_API_KEY-IjzwN3"
+        },
+        {
+          "name": "GEMINI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-2:593489476293:secret:llm-analysis-service/GEMINI_API_KEY-V4cogh"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/llm-analysis-service",
+          "awslogs-region": "use-east-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

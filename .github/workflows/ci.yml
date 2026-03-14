@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]       # every branch
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: llm_user
+          POSTGRES_PASSWORD: llm_password
+          POSTGRES_DB: llm_service
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://llm_user:llm_password@localhost:5432/llm_service
+      REDIS_URL: redis://localhost:6379/0
+      ANTHROPIC_API_KEY: dummy-key-for-ci   # tests use mocks, no real calls made
+      GEMINI_API_KEY: dummy-key-for-ci
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 app/ --max-line-length=100 --ignore=E501,W503
+
+      - name: Run tests
+        run: pytest tests/ -v
