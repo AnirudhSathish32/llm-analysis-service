@@ -16,8 +16,6 @@ router = APIRouter(prefix="/v1/documents", tags=["documents"])
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/tmp/uploads"))
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".csv"}
 
-
-
 logger = logging.getLogger(__name__)
 
 @router.post("", status_code=201)
