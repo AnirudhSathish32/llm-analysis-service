@@ -19,7 +19,7 @@ COST_PER_1K_TOKENS = {
 }
 
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-1.5-flash-latest"
 
 
 # ---------------------------------------------------------------------------
