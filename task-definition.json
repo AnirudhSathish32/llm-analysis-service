@@ -45,7 +45,7 @@
         "logDriver": "awslogs", 
         "options": {
           "awslogs-group": "/ecs/llm-analysis-service",
-          "awslogs-region": "use-east-2",
+          "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
         }
       }
