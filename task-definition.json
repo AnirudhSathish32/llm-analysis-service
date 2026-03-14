@@ -42,7 +42,7 @@
         }
       ],
       "logConfiguration": {
-        "logDriver": "awslogs",
+        "logDriver": "awslogs", 
         "options": {
           "awslogs-group": "/ecs/llm-analysis-service",
           "awslogs-region": "use-east-2",

@@ -13,7 +13,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoa
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Config
+# Config values for RAG and ChromaDB — can be overridden by environment variables
 # ---------------------------------------------------------------------------
 CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
