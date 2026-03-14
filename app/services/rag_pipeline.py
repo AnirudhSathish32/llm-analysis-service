@@ -1,10 +1,9 @@
 import os
 import logging
- 
+import google.generativeai as genai
 from pinecone import Pinecone
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pathlib import Path
  
 logger = logging.getLogger(__name__)
