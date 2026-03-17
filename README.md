@@ -6,7 +6,7 @@ A production-deployed document analysis API powered by a RAG pipeline, multi-pro
  
 The API is live and accessible at the Swagger UI:
 ```
-http://3.129.206.59:8000/docs
+http://18.222.255.28:8000/docs
 ```
  
 ---
