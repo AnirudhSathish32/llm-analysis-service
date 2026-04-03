@@ -232,3 +232,95 @@ class TestAnalysisService:
             assert len(response.citations) == 2
             assert response.citations[0].page == "1"
             assert response.citations[1].source == "doc.pdf"
+
+
+# =============================================================================
+# Analysis Service — specific exception handling
+# =============================================================================
+
+class TestAnalysisServiceExceptions:
+    def _make_llm_result(self, provider="anthropic"):
+        return LLMResult(
+            output={"content": "mocked answer"},
+            tokens_input=50,
+            tokens_output=100,
+            cost_usd=0.002,
+            duration_ms=300,
+            provider=provider,
+        )
+
+    @pytest.mark.asyncio
+    async def test_returns_failed_status_on_llm_provider_error(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch.object(LLMRouter, "analyze", new=AsyncMock(side_effect=RuntimeError("Anthropic down"))):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+            assert response.cached is False
+
+    @pytest.mark.asyncio
+    async def test_returns_failed_status_on_rag_retrieval_error(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch("app.services.analysis_service.retrieve_chunks", new=AsyncMock(side_effect=Exception("Pinecone down"))):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(
+                text="what is this?",
+                analysis_type="summary",
+                document_id="doc-123",
+            )
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+            assert response.cached is False
+
+    @pytest.mark.asyncio
+    async def test_returns_failed_status_on_db_error(self, caplog):
+        from sqlalchemy.exc import OperationalError
+        from app.db.models import AnalysisRequest
+
+        call_count = 0
+
+        async def flaky_commit():
+            nonlocal call_count
+            call_count += 1
+            if call_count >= 2:
+                raise OperationalError("stmt", [], Exception("DB down"))
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch.object(LLMRouter, "analyze", new=AsyncMock(return_value=self._make_llm_result())), \
+             patch("app.services.analysis_service.AnalysisRequest", autospec=True) as MockRequest:
+
+            MockRequest.return_value.id = uuid4()
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
+
+            mock_session = AsyncMock()
+            mock_session.commit = flaky_commit
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+            assert response.cached is False
+            assert any("Database error" in record.message for record in caplog.records)
