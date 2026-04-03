@@ -1,5 +1,6 @@
 import os
 import time
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Literal
@@ -96,10 +97,8 @@ async def _call_anthropic(prompt: str) -> LLMResult:
 async def _call_gemini(prompt: str) -> LLMResult:
     start = time.time()
 
-    # Gemini's SDK is sync — acceptable for a fallback path
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel(GEMINI_MODEL)
-    response = model.generate_content(prompt)
+    # Gemini's SDK is sync — run in a thread to avoid blocking the event loop
+    response = await asyncio.to_thread(_generate_content, prompt)
 
     duration_ms = int((time.time() - start) * 1000)
 
@@ -116,6 +115,13 @@ async def _call_gemini(prompt: str) -> LLMResult:
         duration_ms=duration_ms,
         provider="gemini",
     )
+
+
+def _generate_content(prompt: str):
+    """Run the synchronous Gemini SDK call in a separate thread."""
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    model = genai.GenerativeModel(GEMINI_MODEL)
+    return model.generate_content(prompt)
 
 
 # ---------------------------------------------------------------------------
