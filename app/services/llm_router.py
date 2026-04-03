@@ -24,6 +24,24 @@ GEMINI_MODEL = "gemini-1.5-flash-latest"
 
 
 # ---------------------------------------------------------------------------
+# Singleton clients — initialized once at module load
+# ---------------------------------------------------------------------------
+anthropic_client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+gemini_model = genai.GenerativeModel(GEMINI_MODEL)
+
+
+# ---------------------------------------------------------------------------
+# Singleton clients — initialized once at module load
+# ---------------------------------------------------------------------------
+anthropic_client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+gemini_model = genai.GenerativeModel(GEMINI_MODEL)
+
+
+# ---------------------------------------------------------------------------
 # Shared result shape — analysis_service.py only ever sees this
 # ---------------------------------------------------------------------------
 @dataclass
@@ -71,9 +89,8 @@ def _build_prompt(text: str, analysis_type: str, context_chunks: list[str] | Non
 
 async def _call_anthropic(prompt: str) -> LLMResult:
     start = time.time()
-    client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-    response = await client.messages.create(
+    response = await anthropic_client.messages.create(
         model=ANTHROPIC_MODEL,
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
@@ -119,9 +136,7 @@ async def _call_gemini(prompt: str) -> LLMResult:
 
 def _generate_content(prompt: str):
     """Run the synchronous Gemini SDK call in a separate thread."""
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel(GEMINI_MODEL)
-    return model.generate_content(prompt)
+    return gemini_model.generate_content(prompt)
 
 
 # ---------------------------------------------------------------------------
