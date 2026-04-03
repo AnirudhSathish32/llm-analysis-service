@@ -1,15 +1,14 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
+from pydantic import Field
 
 class Settings(BaseSettings):
     app_name: str = "LLM Analysis Service"
     environment: str = "development"
 
-    database_url: str = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://llm_user:llm_password@db:5432/llm_service"
+    database_url: str = Field(
+        default="postgresql+asyncpg://llm_user:llm_password@db:5432/llm_service"
     )
-    redis_url: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    redis_url: str = Field(default="redis://redis:6379/0")
 
     llm_timeout_seconds: int = 120
     llm_max_retries: int = 2
@@ -32,6 +31,3 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
-
-print("Loaded DATABASE_URL:", settings.database_url)
-print("Loaded REDIS_URL:", settings.redis_url)

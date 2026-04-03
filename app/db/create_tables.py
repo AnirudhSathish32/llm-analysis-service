@@ -1,8 +1,11 @@
 import asyncio
+import logging
 from sqlalchemy.exc import OperationalError
 from app.db.base import Base
 from app.db.session import engine
 import app.db.models
+
+logger = logging.getLogger(__name__)
 
 async def create_all_tables(retries: int = 10, delay: int = 2):
     """
@@ -12,13 +15,15 @@ async def create_all_tables(retries: int = 10, delay: int = 2):
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            print("✅ Tables created successfully")
+            logger.info("Tables created successfully")
             return
         except OperationalError:
-            print(f"Database not ready, retrying in {delay}s... ({attempt}/{retries})")
+            logger.warning(
+                "Database not ready, retrying in %ds... (%d/%d)",
+                delay, attempt, retries,
+            )
             await asyncio.sleep(delay)
-    raise RuntimeError("❌ Failed to create tables after multiple retries")
+    raise RuntimeError("Failed to create tables after multiple retries")
 
 if __name__ == "__main__":
     asyncio.run(create_all_tables())
-

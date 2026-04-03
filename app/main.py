@@ -2,20 +2,27 @@ from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 import asyncio
 import uuid
+import logging
 
 from app.api.routes import analysis, metrics, documents
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.db.create_tables import create_all_tables
 from app.cache import redis as redis_cache
 
+logger = logging.getLogger(__name__)
+
+setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     for _ in range(10):
         try:
             await create_all_tables()
+            logger.info("Tables created successfully")
             break
         except Exception:
+            logger.warning("DB not ready, retrying in 2s...")
             await asyncio.sleep(2)
     else:
         raise RuntimeError("Failed to create tables after retries")
@@ -25,7 +32,6 @@ async def lifespan(app: FastAPI):
     yield
 
     await redis_cache.close()
-
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
