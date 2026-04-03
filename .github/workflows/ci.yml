@@ -14,8 +14,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: llm_user
-          POSTGRES_PASSWORD: llm_password
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
           POSTGRES_DB: llm_service
         ports:
           - 5432:5432
@@ -31,7 +31,7 @@ jobs:
           - 6379:6379
 
     env:
-      DATABASE_URL: postgresql+asyncpg://llm_user:llm_password@localhost:5432/llm_service
+      DATABASE_URL: postgresql+asyncpg://ci_user:ci_password@localhost:5432/llm_service
       REDIS_URL: redis://localhost:6379/0
       ANTHROPIC_API_KEY: dummy-key-for-ci   # tests use mocks, no real calls made
       GEMINI_API_KEY: dummy-key-for-ci
