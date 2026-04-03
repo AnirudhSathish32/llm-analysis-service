@@ -37,11 +37,11 @@
 - `tests/` — flat test files, grouped by class with section comment dividers
 
 ### Error Handling
-- Bare `except Exception` used in analysis_service catch-all (anti-pattern — should be specific)
+- Specific exception types defined in `app/core/exceptions.py` (LLMProviderError, RAGRetrievalError, etc.)
 - `HTTPException` for rate limiting (429)
 - `RuntimeError` for fatal startup failures
 - DB retries with `OperationalError` catch in `create_tables.py`
-- `print()` used for debug/logging in `config.py`, `main.py`, `test_connection.py`, `create_tables.py` (anti-pattern — should use proper logging)
+- `logging` module used throughout — no `print()` in production code
 
 ### Test Structure
 - `pytest` with `pytest.mark.asyncio` for async tests
@@ -49,12 +49,6 @@
 - Tests grouped into sections with `# ===` comment dividers
 - Helper methods on test classes (e.g. `_make_llm_result`)
 - External deps (Redis, LLM, RAG) are mocked — no real API calls
-
-### Test Execution
-- All tests MUST be run inside the Docker environment, never directly on the host
-- Command: `docker compose run --rm api pytest` (or `docker compose exec api pytest` for running container)
-- Docker Compose provides the required services (PostgreSQL, Redis) that tests may depend on
-- Never run `pytest` directly against host Python — dependencies and services won't be available
 
 ### Test Execution
 - All tests MUST be run inside the Docker environment, never directly on the host
@@ -106,13 +100,17 @@ Do not touch without approval:
 - SHA-256 hashing of inputs for cache key deduplication
 
 ## Anti-Patterns Found
-- `print()` statements in production code (`config.py`, `main.py`) — should use `logging` module
-- Bare `except Exception` in `analysis_service.py` — swallows error details, should catch specific exceptions and log
-- `config.py` uses `os.getenv()` manually instead of relying on pydantic-settings env loading
-- `llm_client.py` is a simulated stub — not connected to real LLM providers (real logic in `llm_router.py`)
-- `create_tables.py` used instead of Alembic for table creation in lifespan
-- `docker-compose.yaml` references ChromaDB but `task-definition.json` and README reference Pinecone — inconsistent vector DB
-- No `.gitignore` file detected in repo root
+
+### Resolved
+- `print()` statements in production code — replaced with `logging` module
+- Bare `except Exception` in `analysis_service.py` — replaced with specific exception types
+- `config.py` uses `os.getenv()` manually — replaced with pydantic-settings `Field(default=...)`
+- `llm_client.py` simulated stub — deleted (real logic in `llm_router.py`)
+- ChromaDB references in docker-compose — removed, aligned with Pinecone-only architecture
+- No `.gitignore` file — created with standard Python entries
+
+### Remaining (requires approval to fix)
+- `create_tables.py` used instead of Alembic for table creation in lifespan — would require migration setup
 
 ## Override Log
 [none]
