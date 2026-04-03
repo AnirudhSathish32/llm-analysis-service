@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = 50
     rag_top_k: int = 4
 
+    # Upload limits
+    max_upload_bytes: int = 10_485_760  # 10 MB
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @field_validator("database_url")
