@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     llm_max_retries: int = 2
     cache_ttl_seconds: int = 86400
 
+    # DB connection pooling
+    db_pool_size: int = 5
+    db_pool_max_overflow: int = 10
+    db_pool_timeout: int = 30
+
     # ChromaDB
     chroma_host: str = "localhost"
     chroma_port: int = 8001
