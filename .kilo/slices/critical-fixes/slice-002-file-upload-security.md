@@ -1,7 +1,7 @@
 ---
 slice: 2
 task: critical-fixes
-status: pending
+status: completed
 dependencies: none
 severity: high
 ---
