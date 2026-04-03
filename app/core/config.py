@@ -19,10 +19,6 @@ class Settings(BaseSettings):
     db_pool_max_overflow: int = 10
     db_pool_timeout: int = 30
 
-    # ChromaDB
-    chroma_host: str = "localhost"
-    chroma_port: int = 8001
-
     # RAG tuning
     chunk_size: int = 500
     chunk_overlap: int = 50

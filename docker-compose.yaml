@@ -18,15 +18,6 @@ services:
     ports:
       - "6379:6379"
 
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8001:8000"
-    environment:
-      - ANONYMIZED_TELEMETRY=false
-    volumes:
-      - chroma_data:/chroma/chroma
-
   api:
     build: .
     depends_on:
@@ -34,18 +25,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      chromadb:
-        condition: service_started
     environment:
       DATABASE_URL: postgresql+asyncpg://llm_user:llm_password@db:5432/llm_service
       REDIS_URL: redis://redis:6379/0
-      CHROMA_HOST: chromadb
-      CHROMA_PORT: 8000
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:-}
+      PINECONE_INDEX: ${PINECONE_INDEX:-llm-analysis-service}
     ports:
       - "8000:8000"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-volumes:
-  chroma_data:
