@@ -3,7 +3,6 @@ import logging
 import uuid
 from asyncio import TimeoutError as AsyncTimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.schemas.analysis import AnalysisRequestSchema, AnalysisResponseSchema, CitationSchema
