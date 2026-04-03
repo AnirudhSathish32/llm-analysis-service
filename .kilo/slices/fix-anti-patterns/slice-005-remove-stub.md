@@ -1,7 +1,7 @@
 ---
 slice: 5
 task: fix-anti-patterns
-status: pending
+status: completed
 dependencies: slice-002
 ---
 
