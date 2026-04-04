@@ -1,3 +1,25 @@
+"""Two-phase RAG pipeline for document ingestion and retrieval.
+
+Phase 1 (Ingestion): Load a document, chunk it using LangChain's
+RecursiveCharacterTextSplitter, embed chunks using Google's
+gemini-embedding-001, and store in Pinecone.
+
+Phase 2 (Retrieval): Embed a query, find the top-K most semantically
+relevant chunks in Pinecone filtered by document_id, and return
+them with page numbers and source metadata.
+"""
+
+"""Two-phase RAG pipeline for document ingestion and retrieval.
+
+Phase 1 (Ingestion): Load a document, chunk it using LangChain's
+RecursiveCharacterTextSplitter, embed chunks using Google's
+gemini-embedding-001, and store in Pinecone.
+
+Phase 2 (Retrieval): Embed a query, find the top-K most semantically
+relevant chunks in Pinecone filtered by document_id, and return
+them with page numbers and source metadata.
+"""
+
 import os
 import logging
 import google.generativeai as genai
