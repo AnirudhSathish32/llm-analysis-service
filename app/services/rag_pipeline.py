@@ -26,7 +26,7 @@ PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
 
 
 # ---------------------------------------------------------------------------
-# Singleton clients — lazy-initialized on first use
+# Singleton clients -- lazy-initialized on first use
 # ---------------------------------------------------------------------------
 _pinecone_client = None
 
@@ -96,7 +96,7 @@ def _load_file(file_path: str) -> list:
 
 
 # ---------------------------------------------------------------------------
-# Phase 1 — Ingestion
+# Phase 1 -- Ingestion
 # ---------------------------------------------------------------------------
 
 async def ingest_document(file_path: str, document_id: str) -> int:
@@ -117,7 +117,7 @@ async def ingest_document(file_path: str, document_id: str) -> int:
     chunks = splitter.split_documents(raw_docs)
 
     if not chunks:
-        raise ValueError("Document produced no chunks after splitting — file may be empty.")
+        raise ValueError("Document produced no chunks after splitting -- file may be empty.")
 
     # 3. Extract text and metadata
     texts = [chunk.page_content for chunk in chunks]
@@ -155,7 +155,7 @@ async def ingest_document(file_path: str, document_id: str) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Phase 2 — Retrieval
+# Phase 2 -- Retrieval
 # ---------------------------------------------------------------------------
 
 async def retrieve_chunks(document_id: str, query: str) -> list[dict]:
