@@ -50,5 +50,5 @@ app.include_router(documents.router)
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict:
     return {"status": "ok"}
