@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from sqlalchemy.exc import OperationalError
+import uuid
+import uuid
 
 
 # =============================================================================
@@ -98,8 +100,6 @@ class TestErrorSanitization:
     async def test_analysis_error_returns_failed_status_not_exception(self):
         from app.services.analysis_service import AnalysisService
         from app.schemas.analysis import AnalysisRequestSchema
-        from unittest.mock import patch, MagicMock, AsyncMock
-        import uuid
 
         mock_req = MagicMock()
         mock_req.id = uuid.uuid4()

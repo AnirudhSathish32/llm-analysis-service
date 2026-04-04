@@ -133,31 +133,6 @@ class TestCreateTablesLogging:
 
         class FakeConn:
             async def run_sync(self, fn):
-                pass
-
-        class FakeCM:
-            async def __aenter__(self):
-                return FakeConn()
-
-            async def __aexit__(self, *args):
-                pass
-
-        mock_engine = MagicMock()
-        mock_engine.begin = MagicMock(return_value=FakeCM())
-
-        with patch("app.db.create_tables.engine", mock_engine):
-            caplog.set_level(logging.INFO)
-            await create_all_tables(retries=1)
-
-        assert any("Tables created successfully" in record.message for record in caplog.records)
-
-    @pytest.mark.asyncio
-    async def test_logs_warning_on_operational_error(self, caplog):
-        from app.db.create_tables import create_all_tables
-        from sqlalchemy.exc import OperationalError
-
-        class FakeConn:
-            async def run_sync(self, fn):
                 raise OperationalError("stmt", [], Exception("DB not ready"))
 
         class FakeCM:

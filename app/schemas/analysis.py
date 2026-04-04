@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Literal, Annotated
 from uuid import UUID
-from datetime import datetime
 
 
 class CitationSchema(BaseModel):
@@ -29,11 +28,3 @@ class AnalysisResponseSchema(BaseModel):
     provider: Optional[str] = None
     rag_chunks_used: Optional[int] = None
     citations: Optional[list[CitationSchema]] = None
-
-class StoredAnalysisSchema(BaseModel):
-    request_id: UUID
-    analysis_type: str
-    result: Optional[dict]
-    created_at: datetime
-    token_usage: int
-    cost_usd: float
