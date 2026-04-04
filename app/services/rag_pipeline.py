@@ -9,18 +9,6 @@ relevant chunks in Pinecone filtered by document_id, and return
 them with page numbers and source metadata.
 """
 
-"""Two-phase RAG pipeline for document ingestion and retrieval.
-
-Phase 1 (Ingestion): Load a document, chunk it using LangChain's
-RecursiveCharacterTextSplitter, embed chunks using Google's
-gemini-embedding-001, and store in Pinecone.
-
-Phase 2 (Retrieval): Embed a query, find the top-K most semantically
-relevant chunks in Pinecone filtered by document_id, and return
-them with page numbers and source metadata.
-"""
-
-import os
 import logging
 import google.generativeai as genai
 from pinecone import Pinecone
@@ -28,16 +16,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from pathlib import Path
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
-TOP_K = int(os.getenv("RAG_TOP_K", "4"))
-PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
-
 
 # ---------------------------------------------------------------------------
 # Singleton clients — lazy-initialized on first use
@@ -49,7 +30,7 @@ def _get_pinecone_client():
     """Return a cached Pinecone client instance."""
     global _pinecone_client
     if _pinecone_client is None:
-        _pinecone_client = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+        _pinecone_client = Pinecone(api_key=settings.pinecone_api_key.get_secret_value())
     return _pinecone_client
 
 
@@ -79,7 +60,7 @@ def _embed_query_text(text: str) -> list[float]:
 # ---------------------------------------------------------------------------
 
 def _get_index():
-    return pinecone_client.Index(PINECONE_INDEX)
+    return _get_pinecone_client().Index(settings.pinecone_index)
 
 
 # ---------------------------------------------------------------------------
@@ -117,8 +98,8 @@ async def ingest_document(file_path: str, document_id: str) -> int:
 
     # 2. Split into chunks
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
+        chunk_size=settings.chunk_size,
+        chunk_overlap=settings.chunk_overlap,
     )
     chunks = splitter.split_documents(raw_docs)
 
@@ -176,7 +157,7 @@ async def retrieve_chunks(document_id: str, query: str) -> list[dict]:
     index = _get_index()
     results = index.query(
         vector=query_embedding,
-        top_k=TOP_K,
+        top_k=settings.rag_top_k,
         filter={"document_id": {"$eq": document_id}},
         include_metadata=True,
     )
