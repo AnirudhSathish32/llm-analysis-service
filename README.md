@@ -3,12 +3,9 @@
 A production-deployed document analysis API powered by a RAG pipeline, multi-provider LLM routing, and cloud-native infrastructure on AWS ECS Fargate.
  
 ## Live Demo
- 
-The API is live and accessible at the Swagger UI:
-```
-http://18.222.255.28:8000/docs
-```
- 
+
+The API exposes interactive Swagger UI documentation at `/docs` when running.
+
 ---
  
 ## What It Does
@@ -181,7 +178,7 @@ PINECONE_API_KEY       Pinecone API key
 PINECONE_INDEX         Pinecone index name
 DATABASE_URL           PostgreSQL connection string
 REDIS_URL              Redis connection string
-CACHE_TTL_SECONDS      Cache expiry (default: 3600)
+CACHE_TTL_SECONDS      Cache expiry (default: 86400)
 RAG_TOP_K              Number of chunks to retrieve (default: 4)
 ```
  
@@ -197,9 +194,3 @@ Pinecone is a managed serverless vector database — no infrastructure to mainta
  
 **Why Redis for both caching and rate limiting?**
 Both use cases share the same infrastructure. Rate limiting uses Redis atomic increment operations, caching uses key-value storage with TTL. Running Redis as a sidecar keeps the architecture simple without VPC networking complexity.
-
-## Running Locally
-
-```bash
-docker compose up --build
-http://localhost:8000/docs
