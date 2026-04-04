@@ -4,7 +4,7 @@ from app.cache.redis import redis_client
 RATE_LIMIT = 20  # requests
 WINDOW_SECONDS = 60
 
-async def rate_limiter(request: Request):
+async def rate_limiter(request: Request) -> None:
     key = f"rate:{request.client.host}"
     current = await redis_client.incr(key)
 

@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
@@ -107,7 +108,6 @@ async def get_document(
     session: AsyncSession = Depends(get_session),
 ):
     """Check the status of an uploaded document."""
-    from sqlalchemy import select
     result = await session.execute(
         select(Document).where(Document.id == uuid.UUID(document_id))
     )
