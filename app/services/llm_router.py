@@ -7,15 +7,6 @@ return a consistent LLMResult shape so callers never need to know
 which provider responded.
 """
 
-"""LLM router with automatic fallback between providers.
-
-Routes analysis requests to Anthropic Claude as the primary provider.
-If Claude fails for any reason (rate limit, timeout, API error), the
-request is automatically retried with Google Gemini. Both providers
-return a consistent LLMResult shape so callers never need to know
-which provider responded.
-"""
-
 import os
 import time
 import asyncio

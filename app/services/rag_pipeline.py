@@ -169,7 +169,7 @@ async def retrieve_chunks(document_id: str, query: str) -> list[dict]:
 
     index = _get_index()
     results = await asyncio.to_thread(
-        index.query, 
+        index.query,
         vector=query_embedding,
         top_k=TOP_K,
         filter={"document_id": {"$eq": document_id}},
