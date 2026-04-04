@@ -30,7 +30,7 @@ jobs:
       - name: Scan dependencies for known CVEs
         run: |
           pip install pip-audit
-          pip-audit --require-hashes=false
+          pip-audit
 
       - name: Scan for hardcoded secrets
         uses: gitleaks/gitleaks-action@v2
