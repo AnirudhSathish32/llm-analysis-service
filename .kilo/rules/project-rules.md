@@ -50,6 +50,12 @@
 - Helper methods on test classes (e.g. `_make_llm_result`)
 - External deps (Redis, LLM, RAG) are mocked — no real API calls
 
+### Dependency Installation
+- NEVER install packages on the host machine (no `pip install`, `npm install`, `apt install`, etc.)
+- All package installations must happen inside Docker containers or CI environments
+- Use `docker compose run --rm api pip install <package>` if you need to install something for testing
+- If a new dependency is needed, add it to `requirements.txt` and let Docker/CI handle the install
+
 ### Test Execution
 - All tests MUST be run inside the Docker environment, never directly on the host
 - Command: `docker compose run --rm api pytest` (or `docker compose exec api pytest` for running container)
