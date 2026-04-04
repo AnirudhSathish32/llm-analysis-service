@@ -5,13 +5,14 @@ from sqlalchemy import select, func
 
 from app.db.session import get_session
 from app.db.models import AnalysisRequest, AnalysisResult
+from app.core.rate_limit import rate_limiter
 
 router = APIRouter(prefix="/v1/metrics", tags=["metrics"])
 
 logger = logging.getLogger(__name__)
 
 
-@router.get("/usage")
+@router.get("/usage", dependencies=[Depends(rate_limiter)])
 async def usage(session: AsyncSession = Depends(get_session)):
     """
     Aggregate token usage and cost across all completed requests.
@@ -38,7 +39,7 @@ async def usage(session: AsyncSession = Depends(get_session)):
         raise HTTPException(status_code=500, detail="Failed to retrieve usage metrics")
 
 
-@router.get("/usage/by_type")
+@router.get("/usage/by_type", dependencies=[Depends(rate_limiter)])
 async def usage_by_type(session: AsyncSession = Depends(get_session)):
     """
     Break down request count and cost by analysis type (summary vs key_points).

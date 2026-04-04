@@ -10,6 +10,7 @@ from app.db.session import get_session
 from app.db.models import Document
 from app.services.rag_pipeline import ingest_document
 from app.core.config import settings
+from app.core.rate_limit import rate_limiter
 
 router = APIRouter(prefix="/v1/documents", tags=["documents"])
 
@@ -18,7 +19,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt", ".csv"}
 
 logger = logging.getLogger(__name__)
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, dependencies=[Depends(rate_limiter)])
 async def upload_document(
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
@@ -100,14 +101,19 @@ async def upload_document(
         raise HTTPException(status_code=500, detail="Document ingestion failed")
 
 
-@router.get("/{document_id}")
+@router.get("/{document_id}", dependencies=[Depends(rate_limiter)])
 async def get_document(
     document_id: str,
     session: AsyncSession = Depends(get_session),
 ):
     """Check the status of an uploaded document."""
+    try:
+        doc_uuid = uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid document ID format. Must be a valid UUID.")
+
     result = await session.execute(
-        select(Document).where(Document.id == uuid.UUID(document_id))
+        select(Document).where(Document.id == doc_uuid)
     )
     doc = result.scalar_one_or_none()
 
