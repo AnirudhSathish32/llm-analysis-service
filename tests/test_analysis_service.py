@@ -324,3 +324,115 @@ class TestAnalysisServiceExceptions:
             assert response.status == "failed"
             assert response.cached is False
             assert any("Database error" in record.message for record in caplog.records)
+
+
+# =============================================================================
+# Analysis Service — failure paths and caching
+# =============================================================================
+
+class TestAnalysisServiceFailurePaths:
+    def _make_llm_result(self, provider="anthropic"):
+        return LLMResult(
+            output={"content": "mocked answer"},
+            tokens_input=50,
+            tokens_output=100,
+            cost_usd=0.002,
+            duration_ms=300,
+            provider=provider,
+        )
+
+    @pytest.mark.asyncio
+    async def test_analysis_returns_failed_on_llm_timeout(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch("app.services.analysis_service.asyncio.wait_for", new=AsyncMock(side_effect=TimeoutError("timed out"))):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+            assert response.cached is False
+
+    @pytest.mark.asyncio
+    async def test_analysis_returns_failed_on_rag_failure(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch("app.services.analysis_service.retrieve_chunks", new=AsyncMock(side_effect=Exception("Pinecone error"))):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(
+                text="what is this?",
+                analysis_type="summary",
+                document_id="doc-123",
+            )
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+            assert response.cached is False
+
+    @pytest.mark.asyncio
+    async def test_analysis_returns_failed_on_cache_error(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(side_effect=ConnectionError("Redis down"))), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
+             patch.object(LLMRouter, "analyze", new=AsyncMock(return_value=self._make_llm_result())):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.status == "failed"
+
+    @pytest.mark.asyncio
+    async def test_analysis_caches_successful_result(self):
+        mock_req = MagicMock()
+        mock_req.id = uuid4()
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+             patch("app.services.analysis_service.redis_client.set", new=AsyncMock()) as mock_set, \
+             patch.object(LLMRouter, "analyze", new=AsyncMock(return_value=self._make_llm_result())):
+
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello world", analysis_type="summary")
+
+            mock_session = AsyncMock()
+            mock_session.refresh = AsyncMock(side_effect=lambda obj: setattr(obj, "id", mock_req.id))
+
+            await service.analyze(payload, mock_session)
+
+            mock_set.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_analysis_returns_cached_response(self):
+        request_id = str(uuid4())
+
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=f"{request_id}:cached")):
+            service = AnalysisService()
+            payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
+            mock_session = AsyncMock()
+
+            response = await service.analyze(payload, mock_session)
+
+            assert response.cached is True
+            assert response.status == "completed"
