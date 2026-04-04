@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     # Upload limits
     max_upload_bytes: int = 10_485_760  # 10 MB
+    upload_dir: str = "/tmp/uploads"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

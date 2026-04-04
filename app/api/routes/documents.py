@@ -1,6 +1,4 @@
-import os
 import uuid
-import shutil
 import logging
 from pathlib import Path
 
@@ -15,7 +13,7 @@ from app.core.config import settings
 
 router = APIRouter(prefix="/v1/documents", tags=["documents"])
 
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/tmp/uploads"))
+UPLOAD_DIR = Path(settings.upload_dir)
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".csv"}
 
 logger = logging.getLogger(__name__)
@@ -42,7 +40,7 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Filename is required")
 
     # 2. Sanitize filename to prevent path traversal
-    safe_filename = os.path.basename(file.filename)
+    safe_filename = Path(file.filename).name
 
     # 3. Validate extension
     ext = Path(safe_filename).suffix.lower()
