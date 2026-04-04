@@ -1,14 +1,12 @@
 """Two-phase RAG pipeline for document ingestion and retrieval.
 
-Phase 1 (Ingestion): Load a document, chunk it using LangChain's
-RecursiveCharacterTextSplitter, embed chunks using Google's
-gemini-embedding-001, and store in Pinecone.
+Phase 1 (Ingestion): Load a document, chunk it, embed chunks, and store in Pinecone.
 
-Phase 2 (Retrieval): Embed a query, find the top-K most semantically
-relevant chunks in Pinecone filtered by document_id, and return
-them with page numbers and source metadata.
+Phase 2 (Retrieval): Embed a query, find the top-K most relevant chunks in Pinecone.
 """
 
+import os
+import asyncio
 import logging
 import google.generativeai as genai
 from pinecone import Pinecone
@@ -16,9 +14,16 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from pathlib import Path
 
-from app.core.config import settings
-
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
+TOP_K = int(os.getenv("RAG_TOP_K", "4"))
+PINECONE_INDEX = os.getenv("PINECONE_INDEX", "llm-analysis-service")
+
 
 # ---------------------------------------------------------------------------
 # Singleton clients — lazy-initialized on first use
@@ -30,7 +35,7 @@ def _get_pinecone_client():
     """Return a cached Pinecone client instance."""
     global _pinecone_client
     if _pinecone_client is None:
-        _pinecone_client = Pinecone(api_key=settings.pinecone_api_key.get_secret_value())
+        _pinecone_client = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
     return _pinecone_client
 
 
@@ -38,7 +43,7 @@ def _get_pinecone_client():
 # Embedding helper
 # ---------------------------------------------------------------------------
 
-def _embed_texts(texts: list[str]) -> list[list[float]]:
+def _embed_texts_sync(texts: list[str]) -> list[list[float]]:
     result = genai.embed_content(
         model="models/gemini-embedding-001",
         content=texts,
@@ -47,7 +52,7 @@ def _embed_texts(texts: list[str]) -> list[list[float]]:
     return result["embedding"]
 
 
-def _embed_query_text(text: str) -> list[float]:
+def _embed_query_text_sync(text: str) -> list[float]:
     result = genai.embed_content(
         model="models/gemini-embedding-001",
         content=text,
@@ -55,12 +60,20 @@ def _embed_query_text(text: str) -> list[float]:
     )
     return result["embedding"]
 
+
+async def _embed_texts(texts: list[str]) -> list[list[float]]:
+    return await asyncio.to_thread(_embed_texts_sync, texts)
+
+
+async def _embed_query_text(text: str) -> list[float]:
+    return await asyncio.to_thread(_embed_query_text_sync, text)
+
 # ---------------------------------------------------------------------------
 # Pinecone client
 # ---------------------------------------------------------------------------
 
 def _get_index():
-    return _get_pinecone_client().Index(settings.pinecone_index)
+    return _get_pinecone_client().Index(PINECONE_INDEX)
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +111,8 @@ async def ingest_document(file_path: str, document_id: str) -> int:
 
     # 2. Split into chunks
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.chunk_size,
-        chunk_overlap=settings.chunk_overlap,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
     )
     chunks = splitter.split_documents(raw_docs)
 
@@ -118,7 +131,7 @@ async def ingest_document(file_path: str, document_id: str) -> int:
     ]
 
     # 4. Embed all chunks
-    embeddings = _embed_texts(texts)
+    embeddings = await _embed_texts(texts)
 
     # 5. Store in Pinecone
     # Pinecone expects a list of (id, embedding, metadata) tuples
@@ -135,7 +148,7 @@ async def ingest_document(file_path: str, document_id: str) -> int:
     # Upsert in batches of 100 to stay within Pinecone limits
     batch_size = 100
     for i in range(0, len(vectors), batch_size):
-        index.upsert(vectors=vectors[i:i + batch_size])
+        await asyncio.to_thread(index.upsert, vectors=vectors[i:i + batch_size])
 
     logger.info("Stored %d chunks for document %s", len(chunks), document_id)
     return len(chunks)
@@ -152,12 +165,13 @@ async def retrieve_chunks(document_id: str, query: str) -> list[dict]:
     """
     logger.info("Retrieving chunks for document %s", document_id)
 
-    query_embedding = _embed_query_text(query)
+    query_embedding = await _embed_query_text(query)
 
     index = _get_index()
-    results = index.query(
+    results = await asyncio.to_thread(
+        index.query, 
         vector=query_embedding,
-        top_k=settings.rag_top_k,
+        top_k=TOP_K,
         filter={"document_id": {"$eq": document_id}},
         include_metadata=True,
     )
