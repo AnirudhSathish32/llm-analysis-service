@@ -2,11 +2,41 @@ name: CI
 
 on:
   push:
-    branches: ["**"]       # every branch
+    branches: ["**"]
   pull_request:
     branches: ["**"]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 app/ --max-line-length=100 --ignore=E501,W503,E302,E305,E122,E241,W292,W391,W293,F401,F821
+
+      - name: Scan dependencies for known CVEs
+        run: |
+          pip install pip-audit
+          pip-audit --require-hashes=false
+
+      - name: Scan for hardcoded secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     runs-on: ubuntu-latest
 
@@ -33,7 +63,7 @@ jobs:
     env:
       DATABASE_URL: postgresql+asyncpg://ci_user:ci_password@localhost:5432/llm_service
       REDIS_URL: redis://localhost:6379/0
-      ANTHROPIC_API_KEY: dummy-key-for-ci   # tests use mocks, no real calls made
+      ANTHROPIC_API_KEY: dummy-key-for-ci
       GEMINI_API_KEY: dummy-key-for-ci
 
     steps:
@@ -48,10 +78,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Lint with flake8
-        run: |
-          pip install flake8
-          flake8 app/ --max-line-length=100 --ignore=E501,W503,E302,E305,E122,E241,W292,W391,W293,F401,F821
-
       - name: Run tests
         run: pytest tests/ -v
+
+      - name: Build Docker image for scan
+        run: docker build -t llm-analysis-service:ci-scan .
+
+      - name: Scan Docker image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: llm-analysis-service:ci-scan
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH

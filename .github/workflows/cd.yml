@@ -1,11 +1,13 @@
 name: CD
 
 on:
-  push:
-    branches: ["main"]
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
 
 env:
-  AWS_REGION: us-east-2                  # e.g. us-east-1  — update this
+  AWS_REGION: us-east-2
   ECR_REPOSITORY: llm-analysis-service
   ECS_CLUSTER: llm-analysis-cluster
   ECS_SERVICE: llm-analysis-service
@@ -15,10 +17,13 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -35,11 +40,10 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          # Also tag as latest
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -53,20 +57,15 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy to ECS
-        id: deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true   # blocks until ECS confirms healthy
+          wait-for-service-stability: true
 
-      # -----------------------------------------------------------------------
-      # Rollback: if the deploy step fails, force ECS back to the previous
-      # task definition revision (the one that was running before this push)
-      # -----------------------------------------------------------------------
       - name: Rollback on failure
-        if: failure() && steps.deploy.outcome == 'failure'
+        if: failure()
         run: |
           echo "Deploy failed — rolling back to previous task definition..."
           PREV_REVISION=$(aws ecs describe-services \
