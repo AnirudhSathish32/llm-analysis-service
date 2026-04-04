@@ -41,7 +41,12 @@ class AnalysisService:
         )
 
         cache_key = f"analysis:{input_hash}"
-        cached = await redis_client.get(cache_key)
+        try:
+            cached = await redis_client.get(cache_key)
+        except Exception as cache_err:
+            logger.warning("Cache read failed for key %s: %s", cache_key, cache_err)
+            cached = None
+
         if cached:
             return AnalysisResponseSchema(
                 request_id=uuid.UUID(cached.split(":")[0]),
