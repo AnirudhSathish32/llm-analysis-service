@@ -51,4 +51,5 @@ app.include_router(documents.router)
 
 @app.get("/health")
 async def health() -> dict:
+    """Health check endpoint. Returns OK if the service is running."""
     return {"status": "ok"}
