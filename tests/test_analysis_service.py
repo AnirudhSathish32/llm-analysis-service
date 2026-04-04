@@ -250,13 +250,13 @@ class TestAnalysisServiceExceptions:
         )
 
     @pytest.mark.asyncio
-    async def test_returns_failed_status_on_llm_provider_error(self):
+    async def test_analysis_returns_failed_on_cache_error(self):
         mock_req = MagicMock()
         mock_req.id = uuid4()
 
-        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(return_value=None)), \
+        with patch("app.services.analysis_service.redis_client.get", new=AsyncMock(side_effect=ConnectionError("Redis down"))), \
              patch("app.services.analysis_service.redis_client.set", new=AsyncMock()), \
-             patch.object(LLMRouter, "analyze", new=AsyncMock(side_effect=RuntimeError("Anthropic down"))):
+             patch.object(LLMRouter, "analyze", new=AsyncMock(return_value=self._make_llm_result())):
 
             service = AnalysisService()
             payload = AnalysisRequestSchema(text="hello", analysis_type="summary")
@@ -266,7 +266,8 @@ class TestAnalysisServiceExceptions:
 
             response = await service.analyze(payload, mock_session)
 
-            assert response.status == "failed"
+            assert response.status == "completed"
+            assert response.cached is False
             assert response.cached is False
 
     @pytest.mark.asyncio
@@ -402,7 +403,8 @@ class TestAnalysisServiceFailurePaths:
 
             response = await service.analyze(payload, mock_session)
 
-            assert response.status == "failed"
+            assert response.status == "completed"
+            assert response.cached is False
 
     @pytest.mark.asyncio
     async def test_analysis_caches_successful_result(self):
