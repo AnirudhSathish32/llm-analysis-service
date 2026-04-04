@@ -94,7 +94,7 @@ async def upload_document(
             "chunk_count": chunk_count,
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("Ingestion failed for document %s", document_id)
         doc.status = "failed"
         await session.commit()

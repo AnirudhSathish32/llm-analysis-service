@@ -33,7 +33,7 @@ async def usage(session: AsyncSession = Depends(get_session)):
             "total_cost_usd": float(row.total_cost_usd or 0),
             "avg_duration_ms": float(row.avg_duration_ms or 0),
         }
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch usage metrics")
         raise HTTPException(status_code=500, detail="Failed to retrieve usage metrics")
 
@@ -64,6 +64,6 @@ async def usage_by_type(session: AsyncSession = Depends(get_session)):
             }
             for row in result.all()
         ]
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to fetch usage-by-type metrics")
         raise HTTPException(status_code=500, detail="Failed to retrieve usage metrics")
