@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
 import uuid
 import logging
+import os
 
 from app.api.routes import analysis, metrics, documents
 from app.core.config import settings
@@ -53,3 +56,23 @@ app.include_router(documents.router)
 async def health() -> dict:
     """Health check endpoint. Returns OK if the service is running."""
     return {"status": "ok"}
+
+
+frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend():
+        """Serve the SPA frontend. All non-API routes return index.html."""
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+
+
+frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend():
+        """Serve the SPA frontend. All non-API routes return index.html."""
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
