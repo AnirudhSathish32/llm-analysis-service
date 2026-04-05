@@ -45,3 +45,4 @@ frontend/dist/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+.devcontainer/

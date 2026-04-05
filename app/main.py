@@ -58,11 +58,11 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
 if os.path.isdir(frontend_dist):
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
 
     @app.get("/{full_path:path}")
-    async def serve_frontend():
+    async def serve_frontend(full_path: str):
         """Serve the SPA frontend. All non-API routes return index.html."""
         return FileResponse(os.path.join(frontend_dist, "index.html"))
