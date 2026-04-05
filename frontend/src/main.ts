@@ -19,13 +19,13 @@ const tabs: TabDef[] = [
   { id: 'settings', label: 'Settings', render: renderSettingsTab },
 ]
 
-let activeTab: TabDef | null = null
+let activeTab = tabs[0]
 
 function init(): void {
   setTheme(getPreferredTheme())
   resolveApiBaseUrl()
   renderNav()
-  if (tabs[0]) switchTab(tabs[0])
+  switchTab(tabs[0])
   setupKeyboardShortcuts()
 }
 
@@ -59,7 +59,6 @@ function renderNav(): void {
 }
 
 function switchTab(tab: TabDef): void {
-  if (!tab) return
   activeTab = tab
 
   const nav = document.getElementById('tab-nav')
