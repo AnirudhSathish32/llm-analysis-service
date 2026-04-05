@@ -66,13 +66,3 @@ if os.path.isdir(frontend_dist):
     async def serve_frontend():
         """Serve the SPA frontend. All non-API routes return index.html."""
         return FileResponse(os.path.join(frontend_dist, "index.html"))
-
-
-frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
-if os.path.isdir(frontend_dist):
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
-
-    @app.get("/{full_path:path}")
-    async def serve_frontend():
-        """Serve the SPA frontend. All non-API routes return index.html."""
-        return FileResponse(os.path.join(frontend_dist, "index.html"))
