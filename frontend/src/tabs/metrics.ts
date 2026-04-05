@@ -1,5 +1,4 @@
 import { renderCard } from '../components/card.ts'
-import { renderBadge } from '../components/badge.ts'
 import { renderButton } from '../components/button.ts'
 import { renderToggle } from '../components/toggle.ts'
 import { showToast } from '../components/toast.ts'

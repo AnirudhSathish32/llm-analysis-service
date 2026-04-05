@@ -6,7 +6,7 @@ import { showToast } from '../components/toast.ts'
 import { apiClient, isApiError } from '../api/client.ts'
 import { config } from '../config.ts'
 import { getFileNameExtension, copyToClipboard } from '../utils/helpers.ts'
-import type { DocumentUploadResponse, DocumentStatus } from '../api/types.ts'
+import type { DocumentUploadResponse } from '../api/types.ts'
 
 export function renderDocumentsTab(): HTMLElement {
   const container = document.createElement('div')
@@ -58,13 +58,22 @@ export function renderDocumentsTab(): HTMLElement {
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault()
     dropZone.classList.remove('border-accent', 'bg-bg-tertiary')
+    if (!e.dataTransfer) return
     const files = e.dataTransfer.files
     if (files.length > 0) handleFileUpload(files[0], resultContainer)
   })
 
   fileInput.addEventListener('change', () => {
     if (fileInput.files && fileInput.files.length > 0) {
-      handleFileUpload(fileInput.files[0], resultContainer)
+      const file = fileInput.files[0]
+      if (file) handleFileUpload(file, resultContainer)
+    }
+  })
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0]
+      if (file) handleFileUpload(file, resultContainer)
     }
   })
 
