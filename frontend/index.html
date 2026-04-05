@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Analysis Service</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-bg-primary text-text-primary font-sans min-h-dvh">
+    <div id="app">
+      <header class="border-b border-border bg-bg-secondary">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+          <h1 class="text-xl font-semibold text-text-primary">LLM Analysis Service</h1>
+          <nav id="tab-nav" class="flex gap-1 mt-3 overflow-x-auto" aria-label="Main navigation"></nav>
+        </div>
+      </header>
+      <main id="tab-content" class="max-w-6xl mx-auto px-4 py-6"></main>
+    </div>
+    <div id="toast-container" class="fixed top-4 right-4 z-30 flex flex-col gap-2" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
