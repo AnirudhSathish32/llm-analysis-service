@@ -59,22 +59,8 @@ export function renderDocumentsTab(): HTMLElement {
     e.preventDefault()
     dropZone.classList.remove('border-accent', 'bg-bg-tertiary')
     if (!e.dataTransfer) return
-    const files = e.dataTransfer.files
-    if (files.length > 0) handleFileUpload(files[0], resultContainer)
-  })
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files && fileInput.files.length > 0) {
-      const file = fileInput.files[0]
-      if (file) handleFileUpload(file, resultContainer)
-    }
-  })
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files && fileInput.files.length > 0) {
-      const file = fileInput.files[0]
-      if (file) handleFileUpload(file, resultContainer)
-    }
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileUpload(file, resultContainer)
   })
 
   uploadSection.appendChild(dropZone)

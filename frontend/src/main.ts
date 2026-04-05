@@ -19,8 +19,6 @@ const tabs: TabDef[] = [
   { id: 'settings', label: 'Settings', render: renderSettingsTab },
 ]
 
-let activeTab: TabDef | null = null
-
 function init(): void {
   setTheme(getPreferredTheme())
   resolveApiBaseUrl()
@@ -59,9 +57,6 @@ function renderNav(): void {
 }
 
 function switchTab(tab: TabDef): void {
-  if (!tab) return
-  activeTab = tab
-
   const nav = document.getElementById('tab-nav')
   if (nav) {
     for (const btn of nav.querySelectorAll('button')) {
